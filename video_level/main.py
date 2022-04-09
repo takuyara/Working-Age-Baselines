@@ -55,7 +55,6 @@ def train_val(model, dataloaders, criterion, optimizer, epochs, patience, device
 			if print_interval is None:
 				pbar = tqdm(dataloaders[phase])
 				pbar.set_description(phase)
-				print_interval = len(pbar)
 			else:
 				pbar = dataloaders[phase]
 				print(f"{phase.capitalize()}:")
@@ -72,10 +71,11 @@ def train_val(model, dataloaders, criterion, optimizer, epochs, patience, device
 					b_acc = torch.sum(lp == y) / y.shape[0]
 					b_acc = b_acc.item()
 					b_loss = b_loss.item()
-					pbar.set_postfix({"loss": f"{b_loss:.4f}", "acc": f"{b_acc * 100:.2f}"})
+					if print_interval is None:
+						pbar.set_postfix({"loss": f"{b_loss:.4f}", "acc": f"{b_acc * 100:.2f}"})
 					e_loss.append(b_loss)
 					e_acc.append(b_acc)
-				if (i + 1) % print_interval == 0:
+				if (print_interval is not None and (i + 1) % print_interval == 0) or i == len(pbar) - 1:
 					print(f"[{i + 1}/{len(pbar)}]: loss = {get_mean(e_loss):.4f}, acc = {get_mean(e_acc) * 100:.2f}")
 			e_loss = sum(e_loss) / len(e_loss)
 			e_acc = sum(e_acc) / len(e_acc)

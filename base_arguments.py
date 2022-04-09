@@ -15,5 +15,5 @@ def get_base_parser():
 	parser.add_argument("-g", "--device", type = str, default = "cuda", help = "The GPU index (or CPU if do not use GPU) to use.")
 	parser.add_argument("-lr", "--learning-rate", type = float, default = 1e-3, help = "The learning rate.")
 
-	parser.add_argument("--print-interval", type = int, default = None, help = "The print interval for mini-batches. If not set, use progress bar to show.")
+	parser.add_argument("-prtit", "--print-interval", type = int, default = None, help = "The print interval for mini-batches. If not set, use progress bar to show.")
 	return parser

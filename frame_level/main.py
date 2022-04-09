@@ -4,6 +4,7 @@ sys.path.append("../")
 
 import os
 import csv
+import time
 import torch
 from torch.utils.data import DataLoader
 from torch import nn, optim
@@ -29,11 +30,12 @@ def get_args():
 	args.model_config = r_config
 	return args
 
-def train_val(model, dataloaders, criterion, optimizer, epochs, patience, device):
+def train_val(model, dataloaders, criterion, optimizer, epochs, patience, device, print_interval):
 	min_loss, max_acc = 1e100, 0
 	stop_training = False
 	for i in range(1, epochs + 1):
 		print("Epoch ", i)
+		sttime = time.time()
 		for phase in ["train", "val"]:
 			e_loss = []
 			e_acc = []
@@ -41,9 +43,14 @@ def train_val(model, dataloaders, criterion, optimizer, epochs, patience, device
 				model.train()
 			else:
 				model.eval()
-			pbar = tqdm(dataloaders[phase])
-			pbar.set_description(phase)
-			for x, y in pbar:
+			if print_interval is None:
+				pbar = tqdm(dataloaders[phase])
+				pbar.set_description(phase)
+				print_interval = len(pbar)
+			else:
+				pbar = dataloaders[phase]
+				print(f"{phase.capitalize()}:")
+			for i, (x, y) in enumerate(pbar):
 				optimizer.zero_grad()
 				x, y = x.to(device), y.to(device)
 				with torch.set_grad_enabled(phase == "train"):
@@ -59,10 +66,10 @@ def train_val(model, dataloaders, criterion, optimizer, epochs, patience, device
 					pbar.set_postfix({"loss": f"{b_loss:.4f}", "acc": f"{b_acc * 100:.2f}"})
 					e_loss.append(b_loss)
 					e_acc.append(b_acc)
+				if (i + 1) % print_interval == 0:
+					print(f"[{i + 1}/{len(pbar)}]: loss = {get_mean(e_loss):.4f}, acc = {get_mean(e_acc) * 100:.2f}")
 			e_loss = sum(e_loss) / len(e_loss)
 			e_acc = sum(e_acc) / len(e_acc)
-			pbar.set_postfix({"loss": e_loss, "acc": e_acc})
-			pbar.close()
 			if phase == "val":
 				if e_loss < min_loss:
 					min_loss, min_epoch = e_loss, i
@@ -72,6 +79,7 @@ def train_val(model, dataloaders, criterion, optimizer, epochs, patience, device
 					max_acc = e_acc
 					print("new_max_acc ", e_acc)
 					best_state = deepcopy(model.state_dict())
+		print(f"Epoch time: {time.time() - sttime}s")
 		if stop_training:
 			break
 	return max_acc, best_state

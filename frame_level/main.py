@@ -30,7 +30,7 @@ def get_args():
 	args.model_config = r_config
 	return args
 
-def train_val(model, dataloaders, criterion, optimizer, epochs, patience, device, print_interval):
+def train_val(model, dataloaders, criterion, optimizer, epochs, patience, device, print_interval, ckpt_path = None):
 	min_loss, max_acc = 1e100, 0
 	stop_training = False
 	for i in range(1, epochs + 1):
@@ -79,6 +79,8 @@ def train_val(model, dataloaders, criterion, optimizer, epochs, patience, device
 					max_acc = e_acc
 					print("new_max_acc ", e_acc)
 					best_state = deepcopy(model.state_dict())
+					if ckpt_path is not None:
+						torch.save(ckpt_path, best_state)
 		print(f"Epoch time: {time.time() - sttime}s")
 		if stop_training:
 			break
@@ -95,7 +97,8 @@ def main():
 	optimizer = optim.Adam(model.parameters(), lr = args.learning_rate)
 	device = torch.device(args.device)
 	model = model.to(device)
-	max_acc, best_state = train_val(model, dataloaders, criterion, optimizer, args.epochs, args.patience, device)
+	ckpt_path = os.path.join(args.save_path, f"frame-{get_identifier(args.feature_path)}-{args.cur_fold}-ckpt.pth"
+	max_acc, best_state = train_val(model, dataloaders, criterion, optimizer, args.epochs, args.patience, device, args.print_interval, ckpt_path)
 	print("Best accuracy: ", max_acc)
 	save_path = os.path.join(args.save_path, f"frame-{get_identifier(args.feature_path)}-{args.cur_fold}-{max_acc:.4f}.pth")
 	torch.save({"model": best_state, "config": args.model_config}, save_path)

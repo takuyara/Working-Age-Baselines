@@ -81,6 +81,7 @@ def main():
 	model.load_state_dict(resume_data["model"])
 	model = model.to(device)
 	model.eval()
+	print(args.resume_path)
 	for task in config.all_tasks:
 		acc = solve_single(model, DataLoader(datasets[task], batch_size = args.batch_size), device)
 		print(acc)

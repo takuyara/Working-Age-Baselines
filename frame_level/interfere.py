@@ -24,12 +24,15 @@ def get_args():
 	parser.add_argument("-npp", "--new-prediction-path", type = str, default = None)
 	args = parser.parse_args()
 	path = args.model_config
-	r_config = []
-	with open(path, newline = "") as f:
-		reader = csv.DictReader(f)
-		for row in reader:
-			r_config.append((int(row["channels"]), float(row["dropout"])))
-	args.model_config = r_config
+	if os.path.exists(path):
+		r_config = []
+		with open(path, newline = "") as f:
+			reader = csv.DictReader(f)
+			for row in reader:
+				r_config.append((int(row["channels"]), float(row["dropout"])))
+		args.model_config = r_config
+	else:
+		args.model_config = None
 	return args
 
 def solve_single(path, nfp, npp, args):

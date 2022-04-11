@@ -8,11 +8,14 @@ from utils import get_label
 logger = logging.getLogger(__name__)
 
 class VideoDataset(Dataset):
-	def __init__(self, feature_path, label_path, subtask_ids, predict_dim, min_len, transform = None):
+	def __init__(self, feature_path, label_path, subtask_ids, predict_dim, min_len, transform = None, required_task = None):
 		super().__init__()
 		self.total_items = []
 		self.transform = transform
 		for site, participant, task in subtask_ids:
+			if required_task is not None:
+				if task != required_task:
+					continue
 			csv_path = os.path.join(os.path.join(os.path.join(label_path, site), "SAM"), f"{participant}.csv")
 			try:
 				with open(csv_path, newline = "") as f:

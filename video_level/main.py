@@ -17,15 +17,11 @@ from model import *
 from integrator import *
 from model_wrapper import ModelWrapper
 from dataset import VideoDataset
-from utils import get_partitions, num_classes, get_identifier
-from base_arguments import get_base_parser
-
+from utils import get_partitions, num_classes, get_identifier, get_dim_name
+from arguments import get_video_parser
 
 def get_args():
-	parser = get_base_parser()
-	parser.add_argument("-il", "--integrate-length", type = int, default = 80, help = "The N for spectral representation, the input length for LSTM. In other words, the output length of integrator.")
-	parser.add_argument("-hp", "--hidden-param", type = int, default = 256, help = "The resolultion for spectral representation, the hidden size for LSTM.")
-	parser.add_argument("-i", "--integrator", type = str, choices = ["LSTM", "SPECTRAL"], default = "SPECTRAL", help = "The integrator")
+	parser = get_video_parser()
 	args = parser.parse_args()
 	path = args.model_config
 	r_config = []
@@ -109,7 +105,7 @@ def main():
 		integrator = LSTMInteg(args.integrate_length, args.hidden_param)
 		in_rate = 1
 		min_len = args.integrate_length
-	datasets = {phase : VideoDataset(args.feature_path, args.label_path, partitions[phase], args.predict_dim, min_len, transform = transform) for phase in ["train", "val"]}
+	datasets = {phase : VideoDataset(args.feature_path, args.label_path, partitions[phase], args.predict_dim, min_len, transform = transform, required_task = None) for phase in ["train", "val"]}
 	dataloaders = {phase : DataLoader(t_dataset, batch_size = args.batch_size, shuffle = True) for phase, t_dataset in datasets.items()}
 	model = ModelWrapper(integrator, CNNClassifier(args.model_config, datasets["train"].feature_shape * in_rate, num_classes))
 	criterion = nn.CrossEntropyLoss()
@@ -118,9 +114,8 @@ def main():
 	model = model.to(device)
 	max_acc, best_state = train_val(model, dataloaders, criterion, optimizer, args.epochs, args.patience, device, args.print_interval)
 	print("Best accuracy: ", max_acc)
-	save_path = os.path.join(args.save_path, f"video-{get_identifier(args.feature_path)}-{args.integrator}-{args.cur_fold}-{max_acc:.4f}.pth")
+	save_path = os.path.join(args.save_path, f"video-{get_identifier(args.feature_path)}-{args.integrator}-{max_acc:.4f}.pth")
 	torch.save({"model": best_state, "config": args.model_config}, save_path)
 
 if __name__ == '__main__':
 	main()
-

@@ -14,6 +14,15 @@ def get_label(score):
 		return 2
 	logger.warning(f"Invalid questionnaire score: {score}")
 
+def get_dim_name(x):
+	if x == 0:
+		return "v"
+	if x == 1:
+		return "a"
+	if x == 2:
+		return "d"
+	logger.warning(f"Invalid dim input: {x}")
+
 def get_identifier(path):
 	__, res = os.path.split(path)
 	return res

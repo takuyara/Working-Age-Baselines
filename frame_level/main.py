@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 from model import MLPClassifier
 from dataset import FrameDataset
-from utils import get_partitions, num_classes, get_identifier
+from utils import get_partitions, num_classes, get_identifier, get_dim_name
 from base_arguments import get_base_parser
 
 def get_args():
@@ -100,10 +100,10 @@ def main():
 	optimizer = optim.Adam(model.parameters(), lr = args.learning_rate)
 	device = torch.device(args.device)
 	model = model.to(device)
-	ckpt_path = os.path.join(args.save_path, f"frame-{get_identifier(args.feature_path)}-{args.cur_fold}-ckpt.pth")
+	ckpt_path = os.path.join(args.save_path, f"frame-{get_identifier(args.feature_path)}-{args.cur_fold}-{get_dim_name(args.predict_dim)}-ckpt.pth")
 	max_acc, best_state = train_val(model, dataloaders, criterion, optimizer, args.epochs, args.patience, device, args.print_interval, ckpt_path)
 	print("Best accuracy: ", max_acc)
-	save_path = os.path.join(args.save_path, f"frame-{get_identifier(args.feature_path)}-{args.cur_fold}-{max_acc:.4f}.pth")
+	save_path = os.path.join(args.save_path, f"frame-{get_identifier(args.feature_path)}-{args.cur_fold}-{get_dim_name(args.predict_dim)}-{max_acc:.4f}.pth")
 	torch.save({"model": best_state, "config": args.model_config}, save_path)
 	os.remove(ckpt_path)
 

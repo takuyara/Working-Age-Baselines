@@ -76,7 +76,7 @@ def train_val(model, dataloaders, criterion, optimizer, epochs, patience, device
 					e_loss.append(b_loss)
 					e_acc.append(b_acc)
 				if (print_interval is not None and (i + 1) % print_interval == 0) or i == len(pbar) - 1:
-					print(f"[{i + 1}/{len(pbar)}]: loss = {get_mean(e_loss):.4f}, acc = {get_mean(e_acc) * 100:.2f}")
+					print(f"[{i + 1}/{len(pbar)}]: loss = {get_mean(e_loss):.4f}, acc = {get_mean(e_acc) * 100:.2f}", flush = True)
 			e_loss = sum(e_loss) / len(e_loss)
 			e_acc = sum(e_acc) / len(e_acc)
 			if phase == "val":
@@ -118,7 +118,7 @@ def main():
 	model = model.to(device)
 	max_acc, best_state = train_val(model, dataloaders, criterion, optimizer, args.epochs, args.patience, device, args.print_interval)
 	print("Best accuracy: ", max_acc)
-	save_path = os.path.join(args.save_path, f"frame-{get_identifier(args.feature_path)}-{args.integrator}-{args.cur_fold}-{max_acc:.4f}.pth")
+	save_path = os.path.join(args.save_path, f"video-{get_identifier(args.feature_path)}-{args.integrator}-{args.cur_fold}-{max_acc:.4f}.pth")
 	torch.save({"model": best_state, "config": args.model_config}, save_path)
 
 if __name__ == '__main__':

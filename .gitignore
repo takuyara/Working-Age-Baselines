@@ -153,3 +153,4 @@ cython_debug/
 
 
 checkpoints/*.pth
+checkpoints*

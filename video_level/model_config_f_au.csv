@@ -1,0 +1,4 @@
+kernels,channels,dropout
+3,32,0.2
+5,64,0.5
+2,32,0.2

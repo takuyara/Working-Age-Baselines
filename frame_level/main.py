@@ -70,7 +70,7 @@ def train_val(model, dataloaders, criterion, optimizer, epochs, patience, device
 					e_loss.append(b_loss)
 					e_acc.append(b_acc)
 				if (print_interval is not None and (i + 1) % print_interval == 0) or i == len(pbar) - 1:
-					print(f"[{i + 1}/{len(pbar)}]: loss = {get_mean(e_loss):.4f}, acc = {get_mean(e_acc) * 100:.2f}")
+					print(f"[{i + 1}/{len(pbar)}]: loss = {get_mean(e_loss):.4f}, acc = {get_mean(e_acc) * 100:.2f}", flush = True)
 			e_loss = sum(e_loss) / len(e_loss)
 			e_acc = sum(e_acc) / len(e_acc)
 			if phase == "val":
@@ -80,11 +80,11 @@ def train_val(model, dataloaders, criterion, optimizer, epochs, patience, device
 					stop_training = True
 				if e_acc > max_acc:
 					max_acc = e_acc
-					print("new_max_acc ", e_acc)
+					print("new_max_acc ", e_acc, flush = True)
 					best_state = deepcopy(model.state_dict())
 					if ckpt_path is not None:
 						torch.save(best_state, ckpt_path)
-		print(f"Epoch time: {time.time() - sttime}s")
+		print(f"Epoch time: {time.time() - sttime}s", flush = True)
 		if stop_training:
 			break
 	return max_acc, best_state

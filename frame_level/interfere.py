@@ -6,6 +6,7 @@ from dataset import InferDataset
 from base_arguments import get_base_parser
 from utils import num_classes
 import os
+import csv
 import numpy as np
 import torch
 import config
@@ -22,6 +23,13 @@ def get_args():
 	parser.add_argument("-nfp", "--new-feature-path", type = str, default = None)
 	parser.add_argument("-npp", "--new-prediction-path", type = str, default = None)
 	args = parser.parse_args()
+	path = args.model_config
+	r_config = []
+	with open(path, newline = "") as f:
+		reader = csv.DictReader(f)
+		for row in reader:
+			r_config.append((int(row["channels"]), float(row["dropout"])))
+	args.model_config = r_config
 	return args
 
 def solve_single(path, nfp, npp, args):
@@ -31,6 +39,8 @@ def solve_single(path, nfp, npp, args):
 	dataloader = DataLoader(dataset, batch_size = args.batch_size)
 	input_channels = dataset.feature_shape
 	resume_data = torch.load(args.resume_path)
+	if "config" not in resume_data:
+		resume_data = {"model": resume_data, "config": args.model_config}
 	device = torch.device(args.device)
 	model = MLPClassifier(resume_data["config"], input_channels, num_classes)
 	model.load_state_dict(resume_data["model"])

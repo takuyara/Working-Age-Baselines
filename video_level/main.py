@@ -10,6 +10,7 @@ from torch.utils.data import DataLoader
 from torch import nn, optim
 from tqdm import tqdm
 from copy import deepcopy
+from scipy import stats
 import logging
 logger = logging.getLogger(__name__)
 
@@ -19,6 +20,7 @@ from model_wrapper import ModelWrapper
 from dataset import VideoDataset
 from utils import get_partitions, num_classes, get_identifier, get_dim_name
 from arguments import get_video_parser
+from test import main as test
 
 def get_args():
 	parser = get_video_parser()
@@ -35,7 +37,7 @@ def get_args():
 def get_mean(x):
 	return sum(x) / len(x)
 
-def train_val(model, dataloaders, criterion, optimizer, epochs, patience, device, print_interval):
+def train_val(model, dataloaders, criterion, optimizer, epochs, patience, device, print_interval, consistent_model):
 	min_loss, max_acc = 1e100, 0
 	stop_training = False
 	for i in range(1, epochs + 1):
@@ -60,7 +62,7 @@ def train_val(model, dataloaders, criterion, optimizer, epochs, patience, device
 				with torch.set_grad_enabled(phase == "train"):
 					yp = model(x)
 					b_loss = criterion(yp, y)
-					if phase == "train":
+					if phase == "train" and not consistent_model:
 						b_loss.backward()
 						optimizer.step()
 					__, lp = torch.max(yp, dim = 1)
@@ -91,31 +93,53 @@ def train_val(model, dataloaders, criterion, optimizer, epochs, patience, device
 
 def main():
 	args = get_args()
+	print(args.feature_path)
 	partitions = get_partitions(args.feature_path, args.cur_fold)
 	if args.integrator == "SPECTRAL":
 		transform = SpectralRepr(args.integrate_length, args.hidden_param)
 		integrator = None
+		classifier_name = CNNClassifier
 		in_rate = 2
 		min_len = args.hidden_param
-	else:
+	elif args.integrator == "LSTM":
 		def get_mid(x, l):
 			st = (x.shape[0] - l) // 2
 			return x[st : st + l, ...]
 		transform = get_mid
 		integrator = LSTMInteg(args.integrate_length, args.hidden_param)
+		classifier_name = CNNClassifier
 		in_rate = 1
 		min_len = args.integrate_length
+	elif args.integrator == "MODE":
+		def mode_onehot(x):
+			t, __ = stats.mode(x)
+			t = np.eye(num_classes)[t.astype("uint8")].flatten()
+			return t
+		transform = mode_onehot
+		integrator = None
+		classifier_name = NullClassifier
+		min_len = 0
+		in_rate = 0
+	elif args.integrator == "AVERAGE":
+		transform = lambda x : np.mean(x, axis = 0)
+		integrator = None
+		classifier_name = MLPClassifier
+		min_len = 0
+		in_rate = 1
 	datasets = {phase : VideoDataset(args.feature_path, args.label_path, partitions[phase], args.predict_dim, min_len, transform = transform, required_task = None) for phase in ["train", "val"]}
 	dataloaders = {phase : DataLoader(t_dataset, batch_size = args.batch_size, shuffle = True) for phase, t_dataset in datasets.items()}
-	model = ModelWrapper(integrator, CNNClassifier(args.model_config, datasets["train"].feature_shape * in_rate, num_classes))
+	model = ModelWrapper(integrator, classifier_name(args.model_config, datasets["train"].feature_shape * in_rate, num_classes))
 	criterion = nn.CrossEntropyLoss()
 	optimizer = optim.Adam(model.parameters(), lr = args.learning_rate)
 	device = torch.device(args.device)
 	model = model.to(device)
-	max_acc, best_state = train_val(model, dataloaders, criterion, optimizer, args.epochs, args.patience, device, args.print_interval)
+	max_acc, best_state = train_val(model, dataloaders, criterion, optimizer, args.epochs, args.patience, device, args.print_interval, consistent_model = classifier_name == NullClassifier)
 	print("Best accuracy: ", max_acc)
 	save_path = os.path.join(args.save_path, f"video-{get_identifier(args.feature_path)}-{args.integrator}-{max_acc:.4f}.pth")
 	torch.save({"model": best_state, "config": args.model_config}, save_path)
+	setattr(args, "resume_path", save_path)
+	if args.evaluate:
+		test(args)
 
 if __name__ == '__main__':
 	main()

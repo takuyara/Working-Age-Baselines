@@ -20,3 +20,26 @@ class CNNClassifier(nn.Module):
 		x = self.before_fc(x)
 		x = self.fc(x)
 		return x
+
+class MLPClassifier(nn.Module):
+	def __init__(self, kernels_channels_dropout, in_channels, num_classes, **kwargs):
+		super().__init__(**kwargs)
+		hiddens = OrderedDict()
+		for i, (__, channels, dropout) in enumerate(kernels_channels_dropout):
+			hiddens[f"dense_{i}"] = nn.Linear(in_channels, channels)
+			hiddens[f"relu_{i}"] = nn.ReLU()
+			hiddens[f"dropout_{i}"] = nn.Dropout(dropout)
+			in_channels = channels
+		self.hiddens = nn.Sequential(hiddens)
+		self.fc = nn.Linear(in_channels, num_classes)
+	def forward(self, x):
+		x = self.hiddens(x)
+		x = self.fc(x)
+		return x
+
+class NullClassifier(nn.Module):
+	def __init__(self, kernels_channels_dropout, in_channels, num_classes, **kwargs):
+		super().__init__(**kwargs)
+		self.null_linear = nn.Linear(1, 1)
+	def forward(self, x):
+		return x

@@ -29,10 +29,10 @@ class VideoDataset(Dataset):
 				continue
 			this_feature_path = os.path.join(os.path.join(os.path.join(feature_path, site), participant), f"{task}.npy")
 			if not os.path.exists(this_feature_path):
-				logger.warning(f"Feature file not found: {this_feature_path}")
+				# logger.warning(f"Feature file not found: {this_feature_path}")
 				continue
 			if np.load(this_feature_path).shape[0] < min_len:
-				logger.warning(f"Too short input: {this_feature_path}")
+				# logger.warning(f"Too short input: {this_feature_path}")
 				continue
 			self.total_items.append((this_feature_path, this_label))
 		self.feature_shape = np.load(self.total_items[0][0])[0, ...].flatten().shape[0]

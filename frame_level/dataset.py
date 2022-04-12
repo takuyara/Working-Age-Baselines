@@ -25,7 +25,7 @@ class FrameDataset(Dataset):
 				continue
 			this_feature_path = os.path.join(os.path.join(os.path.join(feature_path, site), participant), f"{task}.npy")
 			if not os.path.exists(this_feature_path):
-				logger.warning(f"Feature file not found: {this_feature_path}")
+				# logger.warning(f"Feature file not found: {this_feature_path}")
 				continue
 			n_frames = np.load(this_feature_path).shape[0]
 			self.total_items.extend([(this_feature_path, i, this_label) for i in range(n_frames)])

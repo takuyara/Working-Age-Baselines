@@ -16,7 +16,7 @@ import logging
 from model import *
 from integrator import *
 from model_wrapper import ModelWrapper
-from scipy.stats import pearsonr
+from scipy import stats
 
 logger = logging.getLogger(__name__)
 
@@ -56,28 +56,46 @@ def solve_single(model, dataloader, device):
 	"""
 	return acc
 	
-def main():
-	args = get_args()
+def main(args):
 	test_ids = get_partitions(args.feature_path, args.cur_fold)["val"]
 	if args.integrator == "SPECTRAL":
 		transform = SpectralRepr(args.integrate_length, args.hidden_param)
 		integrator = None
+		classifier_name = CNNClassifier
 		in_rate = 2
 		min_len = args.hidden_param
-	else:
+	elif args.integrator == "LSTM":
 		def get_mid(x, l):
 			st = (x.shape[0] - l) // 2
 			return x[st : st + l, ...]
 		transform = get_mid
 		integrator = LSTMInteg(args.integrate_length, args.hidden_param)
+		classifier_name = CNNClassifier
 		in_rate = 1
 		min_len = args.integrate_length
+	elif args.integrator == "MODE":
+		def mode_onehot(x):
+			t, __ = stats.mode(x)
+			t = np.eye(num_classes)[t.astype("uint8")].flatten()
+			return t
+		transform = mode_onehot
+		integrator = None
+		classifier_name = NullClassifier
+		min_len = 0
+		in_rate = 0
+	elif args.integrator == "AVERAGE":
+		transform = lambda x : np.mean(x, axis = 0)
+		integrator = None
+		classifier_name = MLPClassifier
+		min_len = 0
+		in_rate = 1
+
 	datasets = {task : VideoDataset(args.feature_path, args.label_path, test_ids, args.predict_dim, min_len, transform = transform, required_task = task) for task in config.all_tasks}
 	resume_data = torch.load(args.resume_path)
 	if "config" not in resume_data:
 		resume_data = {"model": resume_data, "config": args.model_config}
 	device = torch.device(args.device)
-	model = ModelWrapper(integrator, CNNClassifier(resume_data["config"], datasets[config.all_tasks[0]].feature_shape * in_rate, num_classes))
+	model = ModelWrapper(integrator, classifier_name(resume_data["config"], datasets[config.all_tasks[0]].feature_shape * in_rate, num_classes))
 	model.load_state_dict(resume_data["model"])
 	model = model.to(device)
 	model.eval()
@@ -87,4 +105,5 @@ def main():
 		print(acc)
 
 if __name__ == '__main__':
-	main()
+	args = get_args()
+	main(args)

@@ -53,4 +53,5 @@ class VideoDataset(Dataset):
 			feature_value = np.load(feature_path)
 			if self.transform is not None:
 				feature_value = self.transform(feature_value)
-		return feature_value.flatten().astype("float32"), this_label
+		feature_value = feature_value.reshape(feature_value.shape[0], -1)
+		return feature_value.astype("float32"), this_label

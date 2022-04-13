@@ -58,51 +58,36 @@ def solve_single(model, dataloader, device):
 	
 def main(args):
 	test_ids = get_partitions(args.feature_path, args.cur_fold)["val"]
-	if args.integrator == "SPECTRAL":
-		transform = SpectralRepr(args.integrate_length, args.hidden_param)
-		integrator = None
-		classifier_name = CNNClassifier
-		in_rate = 2
-		min_len = args.hidden_param
-	elif args.integrator == "LSTM":
-		def get_mid(x, l):
-			st = (x.shape[0] - l) // 2
-			return x[st : st + l, ...]
-		transform = get_mid
-		integrator = LSTMInteg(args.integrate_length, args.hidden_param)
-		classifier_name = CNNClassifier
-		in_rate = 1
-		min_len = args.integrate_length
-	elif args.integrator == "MODE":
-		def mode_onehot(x):
-			t, __ = stats.mode(x)
-			t = np.eye(num_classes)[t.astype("uint8")].flatten()
-			return t
-		transform = mode_onehot
-		integrator = None
-		classifier_name = NullClassifier
-		min_len = 0
-		in_rate = 0
-	elif args.integrator == "AVERAGE":
-		transform = lambda x : np.mean(x, axis = 0)
-		integrator = None
-		classifier_name = MLPClassifier
-		min_len = 0
-		in_rate = 1
-
-	datasets = {task : VideoDataset(args.feature_path, args.label_path, test_ids, args.predict_dim, min_len, transform = transform, required_task = task) for task in config.all_tasks}
+	def get_mid(x):
+		st = (x.shape[0] - args.integrate_length) // 2
+		return x[st : st + args.integrate_length, ...]
+	def mode_onehot(x):
+		t, __ = stats.mode(x)
+		t = np.eye(num_classes)[t.astype("uint8")].flatten()
+		return t
+	min_lens = {"SPECTRAL": args.hidden_param, "LSTM": args.integrate_length, "MODE": 0, "AVERAGE": 0}
+	transforms = {"SPECTRAL": SpectralRepr(args.integrate_length, args.hidden_param), "LSTM": get_mid, "MODE": mode_onehot, "AVERAGE": lambda x : np.mean(x, axis = 0)}
+	classifiers = {"SPECTRAL": CNNClassifier, "LSTM": CNNClassifier, "MODE": NullClassifier, "AVERAGE": MLPClassifier}
+	datasets = {task : VideoDataset(args.feature_path, args.label_path, test_ids, args.predict_dim, min_lens[args.integrator], transform = transforms[args.integrator], required_task = task, cache_transform = args.cache_transform) for task in config.all_tasks}
+	dataloaders = {task : DataLoader(t_dataset, batch_size = args.batch_size) for task, t_dataset in datasets.items()}
+	feature_shape = datasets[config.all_tasks[0]].feature_shape
+	in_channels = {"SPECTRAL": 2 * feature_shape, "LSTM": 2 * args.hidden_param, "MODE": 1, "AVERAGE": feature_shape}
+	integrators = {"SPECTRAL": None, "LSTM": LSTMInteg(feature_shape, args.hidden_param), "MODE": None, "AVERAGE": None}
 	resume_data = torch.load(args.resume_path)
 	if "config" not in resume_data:
 		resume_data = {"model": resume_data, "config": args.model_config}
 	device = torch.device(args.device)
-	model = ModelWrapper(integrator, classifier_name(resume_data["config"], datasets[config.all_tasks[0]].feature_shape * in_rate, num_classes))
+	model = ModelWrapper(integrators[args.integrator], classifiers[args.integrator](resume_data["config"], in_channels[args.integrator], num_classes))
 	model.load_state_dict(resume_data["model"])
 	model = model.to(device)
 	model.eval()
 	print(args.resume_path)
+	accs = []
 	for task in config.all_tasks:
-		acc = solve_single(model, DataLoader(datasets[task], batch_size = args.batch_size), device)
+		acc = solve_single(model, dataloaders[task], device)
+		accs.append(acc)
 		print(acc)
+	print(sum(accs) / len(accs))
 
 if __name__ == '__main__':
 	args = get_args()

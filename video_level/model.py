@@ -16,6 +16,7 @@ class CNNClassifier(nn.Module):
 		self.before_fc = nn.Sequential(nn.AdaptiveMaxPool1d(1), nn.Flatten(), nn.Dropout(0.3), nn.ReLU())
 		self.fc = nn.Linear(in_channels, num_classes)
 	def forward(self, x):
+		x = x.transpose(1, 2)
 		x = self.hiddens(x)
 		x = self.before_fc(x)
 		x = self.fc(x)

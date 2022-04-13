@@ -21,7 +21,7 @@ class FrameDataset(Dataset):
 							this_label = get_label(int(row[task]))
 							break
 			except Exception as e:
-				logger.warning(e)
+				# logger.warning(e)
 				continue
 			this_feature_path = os.path.join(os.path.join(os.path.join(feature_path, site), participant), f"{task}.npy")
 			if not os.path.exists(this_feature_path):

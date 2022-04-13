@@ -8,10 +8,11 @@ from utils import get_label
 logger = logging.getLogger(__name__)
 
 class VideoDataset(Dataset):
-	def __init__(self, feature_path, label_path, subtask_ids, predict_dim, min_len, transform = None, required_task = None):
+	def __init__(self, feature_path, label_path, subtask_ids, predict_dim, min_len, transform = None, required_task = None, cache_transform = False):
 		super().__init__()
 		self.total_items = []
 		self.transform = transform
+		self.cache_transform = cache_transform
 		for site, participant, task in subtask_ids:
 			if required_task is not None:
 				if task != required_task:
@@ -31,16 +32,25 @@ class VideoDataset(Dataset):
 			if not os.path.exists(this_feature_path):
 				# logger.warning(f"Feature file not found: {this_feature_path}")
 				continue
-			if np.load(this_feature_path).shape[0] < min_len:
+			this_feature = np.load(this_feature_path)
+			if this_feature.shape[0] < min_len:
 				# logger.warning(f"Too short input: {this_feature_path}")
 				continue
-			self.total_items.append((this_feature_path, this_label))
-		self.feature_shape = np.load(self.total_items[0][0])[0, ...].flatten().shape[0]
+			self.feature_shape = this_feature[0, ...].flatten().shape[0]
+			if cache_transform:
+				if transform is not None:
+					this_feature = transform(this_feature)
+			else:
+				this_feature = this_feature_path
+			self.total_items.append((this_feature, this_label))
 	def __len__(self):
 		return len(self.total_items)
 	def __getitem__(self, idx):
 		feature_path, this_label = self.total_items[idx]
-		feature_value = np.load(feature_path)
-		if self.transform is not None:
-			feature_value = self.transform(feature_value)
+		if self.cache_transform:
+			feature_value = feature_path
+		else:
+			feature_value = np.load(feature_path)
+			if self.transform is not None:
+				feature_value = self.transform(feature_value)
 		return feature_value.astype("float32"), this_label

@@ -35,7 +35,7 @@ def get_partitions(feature_path, val_index):
 			for task in config.all_tasks:
 				task_path = os.path.join(os.path.join(site_path, participant), f"{task}.npy")
 				if not os.path.exists(task_path):
-					logger.warning(f"Feature file not found: {task_path}")
+					# logger.warning(f"Feature file not found: {task_path}")
 					continue
 				t_part = "val" if i == val_index else "train"
 				partitions[t_part].append((site, participant, task))

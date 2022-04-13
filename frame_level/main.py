@@ -52,7 +52,7 @@ def train_val(model, dataloaders, criterion, optimizer, epochs, patience, device
 			else:
 				pbar = dataloaders[phase]
 				print(f"{phase.capitalize()}:")
-			for i, (x, y) in enumerate(pbar):
+			for j, (x, y) in enumerate(pbar):
 				optimizer.zero_grad()
 				x, y = x.to(device), y.to(device)
 				with torch.set_grad_enabled(phase == "train"):
@@ -69,8 +69,8 @@ def train_val(model, dataloaders, criterion, optimizer, epochs, patience, device
 						pbar.set_postfix({"loss": f"{b_loss:.4f}", "acc": f"{b_acc * 100:.2f}"})
 					e_loss.append(b_loss)
 					e_acc.append(b_acc)
-				if (print_interval is not None and (i + 1) % print_interval == 0) or i == len(pbar) - 1:
-					print(f"[{i + 1}/{len(pbar)}]: loss = {get_mean(e_loss):.4f}, acc = {get_mean(e_acc) * 100:.2f}", flush = True)
+				if (print_interval is not None and (j + 1) % print_interval == 0) or j == len(pbar) - 1:
+					print(f"[{j + 1}/{len(pbar)}]: loss = {get_mean(e_loss):.4f}, acc = {get_mean(e_acc) * 100:.2f}", flush = True)
 			e_loss = sum(e_loss) / len(e_loss)
 			e_acc = sum(e_acc) / len(e_acc)
 			if phase == "val":

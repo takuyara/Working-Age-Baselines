@@ -43,14 +43,13 @@ class SpectralRepr(nn.Module):
 		t, k = self.cut_data(t, self.resolution)
 		t = t - np.median(t, axis = 0)
 		amp_map, phase_map = self.fft_select(t, self.N, k, self.resolution)
-		t = np.concatenate([amp_map, phase_map], axis = 1).T
+		t = np.concatenate([amp_map, phase_map], axis = 1)
 		return t
 
 class LSTMInteg(nn.Module):
 	def __init__(self, in_channels, hidden_size, **kwargs):
 		super().__init__(**kwargs)
-		self.lstm = nn.LSTM(input_size = in_channels, hidden_size = hidden_size, num_layers = 1, dropout = 0.3, num_directions = 2)
+		self.lstm = nn.LSTM(input_size = in_channels, hidden_size = hidden_size, num_layers = 1, bidirectional = True, batch_first = True)
 	def forward(self, x):
 		x, __ = self.lstm(x)
-		x = x.transpose()
 		return x

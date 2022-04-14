@@ -36,7 +36,8 @@ class VideoDataset(Dataset):
 			if this_feature.shape[0] < min_len:
 				# logger.warning(f"Too short input: {this_feature_path}")
 				continue
-			self.feature_shape = this_feature[0, ...].flatten().shape[0]
+			this_feature = this_feature.reshape(this_feature.shape[0], -1)
+			self.feature_shape = this_feature.shape[1]
 			if cache_transform:
 				if transform is not None:
 					this_feature = transform(this_feature)
@@ -51,7 +52,7 @@ class VideoDataset(Dataset):
 			feature_value = feature_path
 		else:
 			feature_value = np.load(feature_path)
+			feature_value = feature_value.reshape(feature_value.shape[0], -1)
 			if self.transform is not None:
 				feature_value = self.transform(feature_value)
-		feature_value = feature_value.reshape(feature_value.shape[0], -1)
 		return feature_value.astype("float32"), this_label

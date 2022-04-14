@@ -87,7 +87,7 @@ def train_val(model, dataloaders, criterion, optimizer, epochs, patience, device
 					max_acc = e_acc
 					print("new_max_acc ", e_acc)
 					best_state = deepcopy(model.state_dict())
-		print(f"Epoch time: {time.time() - sttime}s")
+		# print(f"Epoch time: {time.time() - sttime}s")
 		if stop_training:
 			break
 	return max_acc, best_state

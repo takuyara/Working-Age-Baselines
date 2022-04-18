@@ -95,7 +95,7 @@ def train_val(model, dataloaders, criterion, optimizer, epochs, patience, device
 def main():
 	args = get_args()
 	print(args.feature_path)
-	partitions = get_partitions(args.feature_path, args.cur_fold)
+	partitions = get_partitions(args.feature_path, args.cur_fold, args.gender)
 	def get_mid(x):
 		st = (x.shape[0] - args.integrate_length) // 2
 		return x[st : st + args.integrate_length, ...]

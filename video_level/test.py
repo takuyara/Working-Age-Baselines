@@ -57,7 +57,7 @@ def solve_single(model, dataloader, device):
 	return acc
 	
 def main(args):
-	test_ids = get_partitions(args.feature_path, args.cur_fold)["val"]
+	test_ids = get_partitions(args.feature_path, args.cur_fold, args.gender)["val"]
 	def get_mid(x):
 		st = (x.shape[0] - args.integrate_length) // 2
 		return x[st : st + args.integrate_length, ...]

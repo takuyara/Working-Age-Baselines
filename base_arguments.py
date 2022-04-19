@@ -8,7 +8,7 @@ def get_base_parser():
 	parser.add_argument("-pd", "--predict-dim", type = int, default = 0, choices = [0, 1], help = "The dimension to predict. 0 for valance and 1 for arousal.")
 	parser.add_argument("--save-path", type = str, default = "../checkpoints/", help = "The path to the checkpoint path.")
 	parser.add_argument("-cfg", "--model-config", type = str, default = "./model_config.csv", help = "The model config csv file. Headers should be [channels, dropout].")
-	parser.add_argument("--gender", type = str, choices = ["m", "f", "all"], help = "The gender to predict.")
+	parser.add_argument("--gender", type = str, default = "all", choices = ["m", "f", "all"], help = "The gender to predict.")
 
 	parser.add_argument("-e", "--epochs", type = int, default = 50, help = "The number of epochs")
 	parser.add_argument("-b", "--batch-size", type = int, default = 32, help = "The batch size.")

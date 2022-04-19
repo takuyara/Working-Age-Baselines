@@ -106,7 +106,7 @@ def main():
 	min_lens = {"SPECTRAL": args.hidden_param, "LSTM": args.integrate_length, "MODE": 0, "AVERAGE": 0}
 	transforms = {"SPECTRAL": SpectralRepr(args.integrate_length, args.hidden_param), "LSTM": get_mid, "MODE": mode_onehot, "AVERAGE": lambda x : np.mean(x, axis = 0)}
 	classifiers = {"SPECTRAL": CNNClassifier, "LSTM": CNNClassifier, "MODE": NullClassifier, "AVERAGE": MLPClassifier}
-	datasets = {phase : VideoDataset(args.feature_path, args.label_path, partitions[phase], args.predict_dim, min_lens[args.integrator], transform = transforms[args.integrator], required_task = None, cache_transform = args.cache_transform) for phase in ["train", "val"]}
+	datasets = {phase : VideoDataset(args.feature_path, args.label_path, partitions[phase], args.predict_dim, min_lens[args.integrator], select_interval = args.select_interval, transform = transforms[args.integrator], required_task = None, cache_transform = args.cache_transform) for phase in ["train", "val"]}
 	dataloaders = {phase : DataLoader(t_dataset, batch_size = args.batch_size, shuffle = True) for phase, t_dataset in datasets.items()}
 	feature_shape = datasets["train"].feature_shape
 	in_channels = {"SPECTRAL": 2 * feature_shape, "LSTM": 2 * args.hidden_param, "MODE": 1, "AVERAGE": feature_shape}

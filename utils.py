@@ -45,3 +45,9 @@ def get_partitions(feature_path, val_index, gender = "all"):
 				t_part = "val" if i == val_index else "train"
 				partitions[t_part].append((site, participant, task))
 	return partitions
+
+def get_info(path):
+	path, task = os.path.split(path)
+	path, participant = os.path.split(path)
+	path, dataset = os.path.split(path)
+	return [dataset, participant, task.replace(".npy", "")]

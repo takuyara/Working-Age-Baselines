@@ -4,7 +4,7 @@ sys.path.append("../")
 
 from dataset import VideoDataset
 from arguments import get_video_parser
-from utils import num_classes, get_partitions, get_best_checkpoint
+from utils import num_classes, get_partitions, get_best_checkpoint_path
 import os
 import csv
 import numpy as np

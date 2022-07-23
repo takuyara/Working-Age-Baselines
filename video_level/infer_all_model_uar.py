@@ -89,8 +89,8 @@ def infer_partial(args):
 	return task_uar
 
 def main():
-	# base_path = "/rds/user/yl847/hpc-work/outlast-f/"
-	base_path = "D:\\working-age-data"
+	base_path = "/rds/user/yl847/hpc-work/outlast-f/"
+	# base_path = "D:\\working-age-data"
 	args = get_args()
 	total_result = []
 	for predict_dim, predict_name in enumerate(["v", "a"]):
@@ -110,7 +110,11 @@ def main():
 						args.model_config = "model_config_f_resnet.csv"
 					args.label_path = os.path.join(base_path, "questionnaire")
 					args.feature_path = os.path.join(base_path, f"{input_feature_type}-{site}-{predict_name}")
-					res_uars = infer_partial(args)
+					try:
+						res_uars = infer_partial(args)
+					except Exception as e:
+						print("Error running: ", e, " at ", predict_name, input_feature_type, long_term_strategy, site)
+						continue
 					for task, uars in res_uars.items():
 						for yt, accs in uars.items():
 							dim_uars.setdefault(task, {}).setdefault(yt, []).extend(accs)

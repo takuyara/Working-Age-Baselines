@@ -4,7 +4,7 @@ sys.path.append("../")
 
 from dataset import VideoDataset
 from arguments import get_video_parser
-from utils import num_classes, get_partitions
+from utils import num_classes, get_partitions, get_best_checkpoint
 import os
 import csv
 import numpy as np
@@ -110,6 +110,7 @@ def main():
 						args.model_config = "model_config_f_resnet.csv"
 					args.label_path = os.path.join(base_path, "questionnaire")
 					args.feature_path = os.path.join(base_path, f"{input_feature_type}-{site}-{predict_name}")
+					args.resume_path = get_best_checkpoint_path("../checkpoints/", f"video-{input_feature_type}-{site}-{predict_name}-{long_term_strategy}-")
 					try:
 						res_uars = infer_partial(args)
 					except Exception as e:

@@ -66,3 +66,14 @@ def get_info(path):
 	path, participant = os.path.split(path)
 	path, dataset = os.path.split(path)
 	return [dataset, participant, task.replace(".npy", "")]
+
+def get_best_checkpoint_path(base_path, prefix):
+	best_accuracy, best_path = 0, None
+	for this_path in os.listdir(base_path):
+		if this_path.startswith(prefix):
+			accuracy = float(this_path[len(prefix) : this_path.find(".pth")])
+			if accuracy > best_accuracy:
+				best_accuracy, best_path = accuracy, this_path
+	if best_path is None:
+		print("Warning: checkpoint not found ", prefix)
+	return best_path

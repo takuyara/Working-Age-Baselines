@@ -46,6 +46,21 @@ def get_partitions(feature_path, val_index, gender = "all"):
 				partitions[t_part].append((site, participant, task))
 	return partitions
 
+def get_partitions1(feature_path, __, ___):
+	partitions = []
+	for site in config.all_sites:
+		site_path = os.path.join(feature_path, site)
+		if not os.path.exists(site_path):
+			continue
+		for participant in os.listdir(site_path):
+			for task in ["DE01", "DH01", "NBE01", "NBH01"]:
+				task_path = os.path.join(os.path.join(site_path, participant), f"{task}.npy")
+				if not os.path.exists(task_path):
+					logger.warning(f"Feature file not found: {task_path}")
+					continue
+				partitions.append((site, participant, task))
+	return {"val": partitions}
+
 def get_info(path):
 	path, task = os.path.split(path)
 	path, participant = os.path.split(path)

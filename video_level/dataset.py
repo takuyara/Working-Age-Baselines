@@ -80,8 +80,8 @@ class VideoDataset1(Dataset):
 							this_label = get_label(int(row[task]))
 							break
 			except Exception as e:
-				logger.warning(e)
-				continue
+				# logger.warning(e)
+				this_label = 0
 			this_feature_path = os.path.join(os.path.join(os.path.join(feature_path, site), participant), f"{task}.npy")
 			if not os.path.exists(this_feature_path):
 				# logger.warning(f"Feature file not found: {this_feature_path}")

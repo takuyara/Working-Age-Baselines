@@ -36,7 +36,7 @@ def get_args():
 	return args
 
 def solve_single(path, nfp, npp, args):
-	if os.path.exists(npp) and os.path.exists(nfp):
+	if os.path.exists(npp):
 		return
 	dataset = InferDataset(path)
 	dataloader = DataLoader(dataset, batch_size = args.batch_size)
@@ -61,26 +61,28 @@ def solve_single(path, nfp, npp, args):
 			resy.append(y)
 			resf.append(f)
 	resy = np.concatenate(resy, axis = 0).astype("float32")
-	resf = np.concatenate(resf, axis = 0).astype("float32")
+	#resf = np.concatenate(resf, axis = 0).astype("float32")
 	np.save(npp, resy)
-	np.save(nfp, resf)
+	#np.save(nfp, resf)
 
 def main():
 	args = get_args()
 	all_files = []
-	for site in config.all_sites:
+	#for site in config.all_sites:
+	for site in ["UCAM"]:
 		sp = os.path.join(args.feature_path, site)
 		for participant in os.listdir(sp):
-			nfp = os.path.join(os.path.join(args.new_feature_path, site), participant)
+			#nfp = os.path.join(os.path.join(args.new_feature_path, site), participant)
 			npp = os.path.join(os.path.join(args.new_prediction_path, site), participant)
-			os.makedirs(nfp, exist_ok = True)
+			#os.makedirs(nfp, exist_ok = True)
 			os.makedirs(npp, exist_ok = True)
-			for task in config.all_tasks:
+			for task in ["DE01", "DH01", "NBE01", "NBH01"]:
 				tp = os.path.join(os.path.join(sp, participant), f"{task}.npy")
 				if not os.path.exists(tp):
 					logger.warning(f"Feature file not found: {tp}")
 					continue
-				all_files.append((tp, os.path.join(nfp, f"{task}.npy"), os.path.join(npp, f"{task}.npy")))
+				#all_files.append((tp, os.path.join(nfp, f"{task}.npy"), os.path.join(npp, f"{task}.npy")))
+				all_files.append((tp, None, os.path.join(npp, f"{task}.npy")))
 	for tfile, nfp, npp in tqdm(all_files):
 		solve_single(tfile, nfp, npp, args)
 
